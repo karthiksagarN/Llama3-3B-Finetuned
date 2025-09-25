@@ -1,8 +1,6 @@
-import os
 from fastapi import FastAPI
 from pydantic import BaseModel
 from transformers import pipeline
-import uvicorn
 
 # -----------------------
 # 1. Define categories
@@ -27,8 +25,8 @@ labels = [
 # -----------------------
 pipe = pipeline(
     "text-generation",
-    model="./llama-classifier",     # your trained model path
-    tokenizer="./llama-classifier",
+    model="./saved_model",     # your trained model path
+    tokenizer="./saved_model",
     device_map="auto"
 )
 
@@ -74,10 +72,3 @@ def classify_transaction(text: str) -> str:
 def classify(req: TransactionRequest):
     category = classify_transaction(req.text)
     return {"text":req.text, "category": category}
-
-# -----------------------
-# 6. Run locally
-# -----------------------
-if __name__ == "__main__":
-    port = int(os.environ.get("PORT", 8000))
-    uvicorn.run("app:app", host="0.0.0.0", port=port)
