@@ -5,13 +5,24 @@ from peft import PeftModel
 import os
 import difflib
 
-token = os.getenv("HF_TOKEN")
+# -------------------------
+#  Loading Config, Model & Pipeline
+# -------------------------
+# Hugging Face token (needed if model is private/gated)
+HF_TOKEN = os.getenv("HF_TOKEN")
 
-# -------------------------
-# 1. Config
-# -------------------------
-BASE_MODEL = "meta-llama/Llama-3.2-3B-Instruct"   # or the one you trained on
-LORA_MODEL = "./saved_model"  # your LoRA adapter directory
+# Your fine-tuned model on the Hub
+model_id = "karthiksagarn/llama3-3.2b-finetuned-financial"
+
+# Load model + tokenizer
+tokenizer = AutoTokenizer.from_pretrained(model_id, use_auth_token=HF_TOKEN)
+model = AutoModelForCausalLM.from_pretrained(
+    model_id,
+    use_auth_token=HF_TOKEN,
+    device_map="auto"
+)
+
+pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, device_map="auto")
 
 labels = [
     "Food & Drinks",
@@ -39,23 +50,7 @@ FEW_SHOT_EXAMPLES = [
 examples_text = "\n\n".join(f"Description: {d}\nCategory: {c}" for d, c in FEW_SHOT_EXAMPLES)
 
 # -------------------------
-# 2. Load model + tokenizer
-# -------------------------
-print("Loading base model from HF Hub...")
-tokenizer = AutoTokenizer.from_pretrained(BASE_MODEL, use_auth_token=token)
-model = AutoModelForCausalLM.from_pretrained(
-    BASE_MODEL,
-    use_auth_token=token,
-    device_map="auto"
-)
-
-print("Loading LoRA adapter...")
-model = PeftModel.from_pretrained(model, LORA_MODEL)
-
-pipe = pipeline("text-generation", model=model, tokenizer=tokenizer, device_map="auto")
-
-# -------------------------
-# 3. FastAPI App
+#  FastAPI App
 # -------------------------
 app = FastAPI()
 
