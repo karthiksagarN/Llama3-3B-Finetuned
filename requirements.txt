@@ -1,7 +1,8 @@
 fastapi
-uvicorn
+uvicorn[standard]
 transformers
 torch
 accelerate
 peft
 bitsandbytes
+pydantic
